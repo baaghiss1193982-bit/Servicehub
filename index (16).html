@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ServiceHub - Professional Home Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .service-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        @media (max-width: 768px) {
+            .service-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <p id="notificationText"></p>
+    </div>
+
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-home text-2xl text-purple-600"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">ServiceHub</h1>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#services" class="text-gray-600 hover:text-purple-600 transition">Services</a>
+                    <a href="#how-it-works" class="text-gray-600 hover:text-purple-600 transition">How it Works</a>
+                    <a href="#" onclick="openModal('bookings')" class="text-gray-600 hover:text-purple-600 transition">My Bookings</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <button onclick="openModal('login')" class="px-4 py-2 text-purple-600 hover:text-purple-700 transition">Login</button>
+                    <button onclick="openModal('signup')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Sign Up</button>
+                    <button class="md:hidden" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars text-2xl text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-40 transform translate-x-full transition-transform duration-300">
+        <div class="p-4">
+            <button onclick="toggleMobileMenu()" class="mb-8">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            <nav class="flex flex-col space-y-4">
+                <a href="#services" onclick="toggleMobileMenu()" class="text-lg text-gray-600">Services</a>
+                <a href="#how-it-works" onclick="toggleMobileMenu()" class="text-lg text-gray-600">How it Works</a>
+                <a href="#" onclick="openModal('bookings'); toggleMobileMenu()" class="text-lg text-gray-600">My Bookings</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">Professional Home Services at Your Doorstep</h2>
+                <p class="text-xl mb-8 opacity-90">Book trusted professionals for all your home service needs</p>
+                <div class="max-w-xl mx-auto">
+                    <div class="flex bg-white rounded-lg overflow-hidden shadow-lg">
+                        <input type="text" id="searchInput" placeholder="Search for a service..." class="flex-1 px-4 py-3 text-gray-800">
+                        <button onclick="searchServices()" class="px-6 py-3 bg-purple-700 text-white hover:bg-purple-800 transition">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Popular Services</h2>
+            <div class="service-grid grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Service cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section id="how-it-works" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">How It Works</h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-mouse-pointer text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">1. Choose a Service</h3>
+                    <p class="text-gray-600">Select from our wide range of home services</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-check text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">2. Book Online</h3>
+                    <p class="text-gray-600">Choose your preferred date and time slot</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-smile text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">3. Relax</h3>
+                    <p class="text-gray-600">Our verified professionals will take care of everything</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modals -->
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Login</h3>
+                <button onclick="closeModal('login')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" required class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" placeholder="Enter your email">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" required class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">Login</button>
+            </form>
+            <p class="text-center mt-4 text-gray-600">
+                Don't have an account? 
+                <a href="#" onclick="switchModal('login', 'signup')" class="text-purple-600 hover:underline">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Sign Up</h3>
+                <button onclick="closeModal('signup')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSignup(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Full Name</label>
+                    <input type="text" required class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" placeholder="Enter your name">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" required class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" placeholder="Enter your email">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Phone</label>
+                    <input type="tel" required pattern="[0-9]{10}" class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" placeholder="Enter 10-digit phone number">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" required minlength="8" class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" placeholder="Min 8 characters">
+                </div>
+                <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">Create Account</button>
+            </form>
+            <p class="text-center mt-4 text-gray-600">
+                Already have an account? 
+                <a href="#" onclick="switchModal('signup', 'login')" class="text-purple-600 hover:underline">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 slide-in max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Book Service</h3>
+                <button onclick="closeModal('booking')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="bookingContent">
+                <!-- Dynamic booking content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings Modal -->
+    <div id="bookingsModal" class="modal">
+        <div class="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 slide-in max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">My Bookings</h3>
+                <button onclick="closeModal('bookings')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="bookingsContent">
+                <!-- Dynamic bookings list -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const services = [
+            { id: 1, name: 'Home Cleaning', icon: 'fa-broom', price: 49, category: 'cleaning' },
+            { id: 2, name: 'AC Repair', icon: 'fa-snowflake', price: 79, category: 'repair' },
+            { id: 3, name: 'Plumbing', icon: 'fa-wrench', price: 69, category: 'repair' },
+            { id: 4, name: 'Electrician', icon: 'fa-bolt', price: 59, category: 'repair' },
+            { id: 5, name: 'Salon at Home', icon: 'fa-cut', price: 39, category: 'beauty' },
+            { id: 6, name: 'Massage', icon: 'fa-spa', price: 89, category: 'wellness' },
+            { id: 7, name: 'Pest Control', icon: 'fa-bug', price: 99, category: 'cleaning' },
+            { id: 8, name: 'Painting', icon: 'fa-paint-roller', price: 149, category: 'renovation' }
+        ];
+
+        let bookings = [];
+        let currentUser = null;
+        let selectedService = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderServices();
+            loadFromLocalStorage();
+        });
+
+        // Render services
+        function renderServices() {
+            const serviceGrid = document.querySelector('.service-grid');
+            serviceGrid.innerHTML = services.map(service => `
+                <div class="service-card bg-white rounded-lg p-6 text-center shadow-md" onclick="openBookingModal(${service.id})">
+                    <i class="fas ${service.icon} text-4xl text-purple-600 mb-4"></i>
+                    <h3 class="text-lg font-semibold mb-2">${service.name}</h3>
+                    <p class="text-gray-600">From $${service.price}</p>
+                </div>
+            `).join('');
+        }
+
+        // Search services
+        function searchServices() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredServices = services.filter(service => 
+                service.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredServices.length > 0) {
+                showNotification('Found ' + filteredServices.length + ' services');
+                // Scroll to services section
+                document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                showNotification('No services found', 'error');
+            }
+        }
+
+        // Modal functions
+        function openModal(modalName) {
+            if (!currentUser && (modalName === 'bookings' || modalName === 'booking')) {
+                showNotification('Please login to continue', 'error');
+                openModal('login');
+                return;
+            }
+            
+            const modal = document.getElementById(modalName + 'Modal');
+            modal.classList.add('active');
+            
+            if (modalName === 'bookings') {
+                renderBookings();
+            }
+        }
+
+        function closeModal(modalName) {
+            const modal = document.getElementById(modalName + 'Modal');
+            modal.classList.remove('active');
+        }
+
+        function switchModal(from, to) {
+            closeModal(from);
+            setTimeout(() => openModal(to), 300);
+        }
+
+        // Authentication
+        function handleLogin(event) {
+            event.preventDefault();
+            const form = event.target;
+            const email = form.elements[0].value;
+            const password = form.elements[1].value;
+            
+            // Simulate authentication
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email && u.password === btoa(password));
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showNotification('Login successful!', 'success');
+                closeModal('login');
+                updateHeader();
+            } else {
+                showNotification('Invalid credentials', 'error');
+            }
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            const form = event.target;
+            const name = form.elements[0].value;
+            const email = form.elements[1].value;
+            const phone = form.elements[2].value;
+            const password = form.elements[3].value;
+            
+            // Store user data securely
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            if (users.find(u => u.email === email)) {
+                showNotification('Email already exists', 'error');
+                return;
+            }
+            
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                phone,
+                password: btoa(password) // Basic encoding for demo
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            currentUser = newUser;
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+            
+            showNotification('Account created successfully!', 'success');
+            closeModal('signup');
+            updateHeader();
+        }
+
+        // Booking functions
+        function openBookingModal(serviceId) {
+            if (!currentUser) {
+                showNotification('Please login to book services', 'error');
+                openModal('login');
+                return;
+            }
+            
+            selectedService = services.find(s => s.id === serviceId);
+            renderBookingForm();
+            openModal('booking');
+        }
+
+        function renderBookingForm() {
+            const content = document.getElementById('bookingContent');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const minDate = tomorrow.toISOString().split('T')[0];
+            
+            content.innerHTML = `
+                <form onsubmit="handleBooking(event)">
+                    <div class="mb-6 bg-purple-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-lg mb-2">${selectedService.name}</h4>
+                        <p class="text-gray-600">Starting from $${selectedService.price}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Select Date</label>
+                        <input type="date" required min="${minDate}" class="w-full px-4 py-2 border rounded-lg focus:border-purple-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Select Time Slot</label>
+                        <select required class="w-full px-4 py-2 border rounded-lg focus:border-purple-500">
+                            <option value="">Choose a time slot</option>
+                            <option value="09:00-11:00">9:00 AM - 11:00 AM</option>
+                            <option value="11:00-13:00">11:00 AM - 1:00 PM</option>
+                            <option value="14:00-16:00">2:00 PM - 4:00 PM</option>
+                            <option value="16:00-18:00">4:00 PM - 6:00 PM</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Service Address</label>
+                        <textarea required class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" rows="3" placeholder="Enter your complete address"></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2">Additional Notes (Optional)</label>
+                        <textarea class="w-full px-4 py-2 border rounded-lg focus:border-purple-500" rows="2" placeholder="Any specific requirements?"></textarea>
+                    </div>
+                    
+                    <div class="border-t pt-4 mt-6">
+                        <div class="flex justify-between mb-4">
+                            <span class="font-semibold">Total Amount:</span>
+                            <span class="text-2xl font-bold text-purple-600">$${selectedService.price}</span>
+                        </div>
+                        <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition flex items-center justify-center">
+                            <span>Confirm Booking</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function handleBooking(event) {
+            event.preventDefault();
+            const form = event.target;
+            
+            const booking = {
+                id: Date.now(),
+                serviceId: selectedService.id,
+                serviceName: selectedService.name,
+                date: form.elements[0].value,
+                timeSlot: form.elements[1].value,
+                address: form.elements[2].value,
+                notes: form.elements[3].value,
+                price: selectedService.price,
+                status: 'confirmed',
+                userId: currentUser.id,
+                createdAt: new Date().toISOString()
+            };
+            
+            bookings.push(booking);
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+            
+            showNotification('Booking confirmed successfully!', 'success');
+            closeModal('booking');
+            
+            // Send confirmation email simulation
+            setTimeout(() => {
+                showNotification('Confirmation email sent!', 'info');
+            }, 2000);
+        }
+
+        function renderBookings() {
+            const content = document.getElementById('bookingsContent');
+            const userBookings = bookings.filter(b => b.userId === currentUser.id);
+            
+            if (userBookings.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No bookings yet</p>
+                        <button onclick="closeModal('bookings')" class="mt-4 text-purple-600 hover:underline">Browse Services</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            content.innerHTML = `
+                <div class="space-y-4">
+                    ${userBookings.map(booking => `
+                        <div class="border rounded-lg p-4 hover:shadow-md transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-semibold text-lg">${booking.serviceName}</h4>
+                                    <p class="text-gray-600 mt-1">
+                                        <i class="fas fa-calendar-alt mr-2"></i>${formatDate(booking.date)}
+                                    </p>
+                                    <p class="text-gray-600">
+                                        <i class="fas fa-clock mr-2"></i>${booking.timeSlot}
+                                    </p>
+                                    <p class="text-gray-600">
+                                        <i class="fas fa-map-marker-alt mr-2"></i>${booking.address}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-2xl font-bold text-purple-600">$${booking.price}</p>
+                                    <span class="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                                        ${booking.status}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex gap-2">
+                                <button onclick="cancelBooking(${booking.id})" class="px-4 py-2 border border-red-500 text-red-500 rounded hover:bg-red-50 transition">
+                                    Cancel Booking
+                                </button>
+                                <button onclick="rescheduleBooking(${booking.id})" class="px-4 py-2 border border-purple-500 text-purple-500 rounded hover:bg-purple-50 transition">
+                                    Reschedule
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function cancelBooking(bookingId) {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                bookings = bookings.filter(b => b.id !== bookingId);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                renderBookings();
+                showNotification('Booking cancelled successfully', 'success');
+            }
+        }
+
+        function rescheduleBooking(bookingId) {
+            showNotification('Reschedule feature coming soon!', 'info');
+        }
+
+        // Utility functions
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = 'notification show';
+            
+            if (type === 'error') {
+                notification.style.background = '#fee';
+                notification.style.color = '#c33';
+            } else if (type === 'success') {
+                notification.style.background = '#efe';
+                notification.style.color = '#3c3';
+            } else {
+                notification.style.background = '#fff';
+                notification.style.color = '#333';
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function updateHeader() {
+            const loginBtn = document.querySelector('button[onclick="openModal(\'login\')"]');
+            const signupBtn = document.querySelector('button[onclick="openModal(\'signup\')"]');
+            
+            if (currentUser) {
+                loginBtn.textContent = currentUser.name.split(' ')[0];
+                loginBtn.onclick = () => handleLogout();
+                signupBtn.style.display = 'none';
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                location.reload();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('translate-x-full');
+        }
+
+        function loadFromLocalStorage() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateHeader();
+            }
+            
+            const savedBookings = localStorage.getItem('bookings');
+            if (savedBookings) {
+                bookings = JSON.parse(savedBookings);
+            }
+        }
+
+        // Security measures
+        // Prevent XSS attacks by sanitizing inputs
+        document.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                e.target.value = e.target.value.replace(/<script[^>]*>.*?<\/script>/gi, '');
+            }
+        });
+
+        // Prevent right-click context menu
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Session timeout
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                if (currentUser) {
+                    handleLogout();
+                    showNotification('Session expired. Please login again.', 'error');
+                }
+            }, 30 * 60 * 1000); // 30 minutes
+        }
+
+        document.addEventListener('mousemove', resetInactivityTimer);
+        document.addEventListener('keypress', resetInactivityTimer);
+        resetInactivityTimer();
+
+        // Service Worker for offline functionality (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
